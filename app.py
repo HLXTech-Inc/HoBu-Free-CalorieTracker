@@ -16,8 +16,17 @@ calorie_lookup = {
 API_URL = "https://api-inference.huggingface.co/models/dima806/food-image-classification"
 
 def classify(image_bytes):
-    r = requests.post(API_URL, files={"file": image_bytes})
-    return r.json()
+    try:
+        response = requests.post(API_URL, files={"file": image_bytes})
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error("⚠️ Network or server error: " + str(e))
+        return []
+    except ValueError:
+        st.error("⚠️ Unexpected response format — model may be loading or busy.")
+        return []
+
 
 uploaded = st.file_uploader("Upload food image", type=["jpg","jpeg","png"])
 if uploaded:
