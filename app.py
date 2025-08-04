@@ -1,3 +1,4 @@
+
 import streamlit as st
 from PIL import Image
 import requests
@@ -14,10 +15,11 @@ calorie_lookup = {
 }
 
 API_URL = "https://api-inference.huggingface.co/models/dima806/food-image-classification"
+headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
 
 def classify(image_bytes):
     try:
-        response = requests.post(API_URL, files={"file": image_bytes})
+        response = requests.post(API_URL, headers=headers, files={"file": image_bytes})
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -27,12 +29,12 @@ def classify(image_bytes):
         st.error("⚠️ Unexpected response format — model may be loading or busy.")
         return []
 
-
 uploaded = st.file_uploader("Upload food image", type=["jpg","jpeg","png"])
 if uploaded:
     img = Image.open(uploaded)
     st.image(img, caption="Your Image", use_column_width=True)
-    st.write("Processing…")
+    st.write("🔍 Classifying...")
+
     result = classify(uploaded.getvalue())
     if isinstance(result, list) and result:
         label = result[0]["label"].lower()
@@ -45,3 +47,4 @@ if uploaded:
             st.warning("Calorie lookup not found for this food.")
     else:
         st.error("Could not classify the image.")
+
